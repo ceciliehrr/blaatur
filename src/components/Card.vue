@@ -1,5 +1,5 @@
 <template>
-  <li :class="['link-card', { 'link-card--closed': closed }]">
+  <li class="container" :class="['link-card', { 'link-card--closed': closed }]">
     <a :href="href">
       <h2>
         {{ title }}
@@ -7,7 +7,6 @@
       </h2>
       <p>
         {{ body }}
-        {{ closed }}
       </p>
     </a>
   </li>
@@ -54,7 +53,6 @@ export default {
   border-radius: 7px;
   background-position: 100%;
   transition: background-position 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 
   & > a {
     width: 100%;
@@ -65,6 +63,7 @@ export default {
     color: white;
     background-color: #23262d;
     opacity: 0.8;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
   }
 
   h2 {
@@ -91,6 +90,28 @@ export default {
   }
 }
 
+/* Container around content */
+.container {
+  position: relative;
+  background-color: inherit;
+  padding-left: 36px;
+}
+/* The circles on the timeline */
+.container::after {
+  content: "";
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  right: -17px;
+
+  background-color: rgb(var(--accent));
+  border: 4px solid rgb(var(--accent-light));
+  top: 38px;
+  border-radius: 50%;
+  z-index: 1;
+  left: -12px;
+}
+
 .link-card:is(:hover, :focus-within) {
   background-position: 0;
   background-image: var(--accent-gradient);
@@ -98,5 +119,10 @@ export default {
 
 .link-card:is(:hover, :focus-within) h2 {
   color: rgb(var(--accent-light));
+}
+
+.link-card--closed.container::after {
+  background-color: rgb(var(--accent-dark));
+  border: 4px solid rgb(var(--accent-dark));
 }
 </style>

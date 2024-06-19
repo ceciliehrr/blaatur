@@ -28,17 +28,16 @@
   <main>
     <h1>Velkommen til<span class="text-gradient">Blåtur!</span></h1>
     <p class="instructions">
-      Det er klart for blåtur.
+      Det er klart for blåtur!
       <code> Hurramegrundt!</code><br />
-      <strong>Men først:</strong> Dere må finne veien.
+      <strong>Men først:</strong> Dere må guide sjåføren til neste ledetråd.
+      <br />
+      Deres første destinasjon er{" "}
+      <strong>Lykke til!</strong>
     </p>
     <div class="timeline">
       <ul role="list" class="link-card-grid">
-        <div
-          v-for="(card, index) in cards"
-          :key="index"
-          :class="['container', { 'container--closed': isClosed }]"
-        >
+        <div v-for="(card, index) in cards" :key="index">
           <Card
             :href="card.href"
             :title="card.title"
@@ -93,18 +92,24 @@ export default {
       cards.reduce((acc, card) => ({ ...acc, [card.id]: true }), {})
     );
 
-    let hasVisited;
+    const resetHasVisited = () => {
+      // Reset the localStorage item - run in console to reset the game
+      localStorage.removeItem("hasVisited");
+      // Also reset the local hasVisited object
+      for (let id in this.hasVisited.value) {
+        this.hasVisited.value[id] = false;
+      }
+    };
 
     const correctCoordinates = [
       { id: "Gamlebyen", latitude: 59.9076862, longitude: 10.771658 },
       { id: "Berlin", latitude: 52.520007, longitude: 13.404954 },
       { id: "Frogner", latitude: 59.922, longitude: 10.706 },
       { id: "Sognsvann", latitude: 59.989, longitude: 10.715 },
-      // Add more coordinates as needed
     ];
 
+    // Define a tolerance in meters for the coordinates
     const tolerance = 5;
-
     const checkCoordinates = (position) => {
       const { latitude, longitude } = position.coords;
       console.log("User coordinates:", latitude, longitude);
@@ -120,39 +125,48 @@ export default {
     };
 
     const handlePosition = (position) => {
-      console.log("Position received:", position);
       const matchedId = checkCoordinates(position);
       if (matchedId) {
-        openCard(matchedId);
-        // Set the flag in localStorage if available
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem("hasVisited", "true");
-          console.log("Setting localStorage hasVisited to true");
+        // Update the hasVisited status for the matched card
+        hasVisited.value[matchedId] = true;
+        // Store the updated hasVisited object in localStorage
+        localStorage.setItem("hasVisited", JSON.stringify(hasVisited.value));
+        // Log the hasVisited object to the console
+        console.log(hasVisited.value);
+      }
+
+      // Open all cards that have been visited
+      for (let id in hasVisited.value) {
+        if (hasVisited.value[id]) {
+          console.log("Card is opened:", id);
+          isClosed.value[id] = false;
         }
-      } else {
-        console.log("User is not in the correct location.");
       }
     };
 
-    const openCard = (cardId) => {
-      console.log("Card is opened:", cardId);
-      isClosed.value[cardId] = false; // Open the card corresponding to cardId
-    };
+    let hasVisited = ref({});
 
     onMounted(() => {
-      console.log("Component mounted");
-
-      // Check if the user has visited before
-      if (typeof localStorage !== "undefined") {
-        hasVisited = localStorage.getItem("hasVisited") === "true";
+      // Initialize the hasVisited object with all cards set to false
+      for (let card of cards) {
+        hasVisited.value[card.id] = false;
       }
-      console.log("hasVisited:", hasVisited);
-      console.log("navigator:", navigator);
-
-      console.log("Requesting geolocation...");
-      navigator.geolocation.getCurrentPosition(handlePosition, (error) => {
-        console.error("Error getting position:", error);
-      });
+      // Update the hasVisited object from localStorage
+      if (localStorage.getItem("hasVisited")) {
+        const storedHasVisited = JSON.parse(localStorage.getItem("hasVisited"));
+        for (let id in storedHasVisited) {
+          hasVisited.value[id] = storedHasVisited[id];
+        }
+      }
+      // Request the geolocation if any card hasn't been visited
+      if (
+        Object.values(hasVisited.value).includes(false) &&
+        navigator.geolocation
+      ) {
+        navigator.geolocation.getCurrentPosition(handlePosition, (error) => {
+          console.error("Error getting position:", error);
+        });
+      }
     });
 
     return {
@@ -163,7 +177,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 main {
   margin: auto;
   padding: 1rem;
@@ -238,31 +252,7 @@ h1 {
   bottom: 0;
   left: 31px;
   margin-left: -31px;
-}
-/* Container around content */
-.container {
-  position: relative;
-  background-color: inherit;
-  padding-left: 36px;
-}
-/* The circles on the timeline */
-.container::after {
-  content: "";
-  position: absolute;
-  width: 25px;
-  height: 25px;
-  right: -17px;
-
-  background-color: rgb(var(--accent));
-  border: 4px solid rgb(var(--accent-light));
-  top: 38px;
-  border-radius: 50%;
-  z-index: 1;
-  left: -12px;
-}
-.container--closed::after {
-  background-color: rgb(var(--accent-dark));
-  border: 4px solid rgb(var(--accent-dark));
+  z-index: -1;
 }
 
 .cardTop {
