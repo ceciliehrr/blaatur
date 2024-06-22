@@ -1,6 +1,6 @@
 <template>
   <li class="container" :class="['link-card', { 'link-card--closed': closed }]">
-    <a :href="href">
+    <a @click.prevent="openModal">
       <h2>
         {{ title }}
         <span>&rarr;</span>
@@ -10,11 +10,23 @@
       </p>
     </a>
   </li>
+  <Modal
+    :title="modalTitle"
+    :body="modalBody"
+    v-if="showModal"
+    @close="closeModal"
+  >
+    <p>Some text in the Modal..</p>
+  </Modal>
 </template>
 
 <script>
+import Modal from "./Modal.vue";
 export default {
   name: "LinkCard",
+  components: {
+    Modal,
+  },
   props: {
     title: {
       type: String,
@@ -24,13 +36,17 @@ export default {
       type: String,
       required: true,
     },
-    href: {
-      type: String,
-      required: true,
-    },
     closed: {
       type: Boolean,
       default: false,
+    },
+    modalTitle: {
+      type: String,
+      default: "Modal title",
+    },
+    modalBody: {
+      type: String,
+      default: "Modal body",
     },
     coordinate: {
       type: Object,
@@ -39,6 +55,20 @@ export default {
         if (!value) return true;
         return "latitude" in value && "longitude" in value;
       },
+    },
+  },
+  data() {
+    return {
+      showModal: false,
+    };
+  },
+  methods: {
+    openModal() {
+      console.log("openModal");
+      this.showModal = true;
+    },
+    closeModal() {
+      this.showModal = false;
     },
   },
 };

@@ -25,6 +25,7 @@
       ></path>
     </svg>
   </div>
+
   <main>
     <h1>Velkommen til<span class="text-gradient">Blåtur!</span></h1>
     <p class="instructions">
@@ -32,61 +33,95 @@
       <code> Hurramegrundt!</code><br />
       <strong>Men først:</strong> Dere må guide sjåføren til neste ledetråd.
       <br />
-      Deres første destinasjon er{" "}
+
       <strong>Lykke til!</strong>
+      <button @click.prevent="openModal">Trykk her for første ledetråd</button>
     </p>
     <div class="timeline">
       <ul role="list" class="link-card-grid">
         <div v-for="(card, index) in cards" :key="index">
           <Card
-            :href="card.href"
-            :title="card.title"
+            :key="isClosed[card.id]"
+            :title="
+              card.hasVisited && !isClosed[card.id]
+                ? card.gratulererTitle
+                : card.title
+            "
             :body="card.body"
             :closed="isClosed[card.id]"
-            :id="card.id"
+            :modalTitle="card.modalTitle"
+            :modalBody="card.modalBody"
           />
         </div>
       </ul>
     </div>
+    <Modal
+      :title="firstModalTitle"
+      :body="firstModalBody"
+      v-if="showModal"
+      @close="closeModal"
+    />
   </main>
 </template>
 
 <script>
 import { ref, onMounted } from "vue";
 import Card from "../components/Card.vue";
+import Modal from "../components/Modal.vue";
+import { watch } from "vue";
 
 export default {
   inheritAttrs: false,
   components: {
     Card,
+    Modal,
   },
   setup() {
     const cards = [
       {
         href: "https://docs.astro.build/",
         title: "Første stoppested",
-        body: "Finn den første ledetråden her. 🚀",
+        gratulererTitle: "Gratulerer! Du er i Heddal!",
+        body: "Finn den neste ledetråden. 🚀",
         id: "Gamlebyen",
+        modalTitle: "Første stoppested",
+        modalBody: "Neste destinasjone er..🚀",
       },
       {
         href: "https://astro.build/integrations/",
         title: "Andre stoppested",
-        body: "Finn den andre ledetråden her. 🚀",
+        gratulererTitle: "Gratulerer!",
+        body: "Finn den neste ledetråden her. 🚀",
         id: "Sørenga",
+        modalTitle: "Andre stoppested",
+        modalBody: "Neste destinasjon er..🚀",
       },
       {
         href: "https://astro.build/themes/",
         title: "tredje stoppested",
-        body: "Finn den tredje ledetråden her. 🚀",
+        gratulererTitle: "Gratulerer!",
+        body: "Finn den neste ledetråden her. 🚀",
         id: "Berlin",
+        modalTitle: "tredje stoppested",
+        modalBody: "Neste destinasjon er..🚀",
       },
       {
         href: "https://astro.build/chat/",
         title: "fjerde stoppested",
+        gratulererTitle: "Gratulerer! du er i Nissedal",
         body: "Siste stoppested ❤️",
         id: "Sognsvann",
+        modalTitle: "fjerde stoppested",
+        modalBody: "Neste destinasjon er..🚀",
       },
     ];
+
+    // listen to the position
+    let position = ref({ x: 0, y: 0 });
+    watch(position, (newPosition) => {
+      handlePosition(newPosition);
+      console.log("Position changed to:", newPosition);
+    });
 
     const isClosed = ref(
       cards.reduce((acc, card) => ({ ...acc, [card.id]: true }), {})
@@ -147,6 +182,8 @@ export default {
     let hasVisited = ref({});
 
     onMounted(() => {
+      //use watchPosition
+      //https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition
       // Initialize the hasVisited object with all cards set to false
       for (let card of cards) {
         hasVisited.value[card.id] = false;
@@ -174,6 +211,23 @@ export default {
       cards,
     };
   },
+  data() {
+    return {
+      showModal: false,
+      firstModalTitle: "Kor ska vi reis hen?",
+      firstModalBody:
+        "I en by kjent for sin industrielle arv, finnes det et eldgammelt byggverk som står som en tidløs portal til middelalderen. Dette bygget, reist av treslagene fra omkringliggende skoger, har stått imot tidens tann og vitner om en svunnen tid. Hvor er vi på vei?",
+    };
+  },
+  methods: {
+    openModal() {
+      console.log("openModal");
+      this.showModal = true;
+    },
+    closeModal() {
+      this.showModal = false;
+    },
+  },
 };
 </script>
 
@@ -186,6 +240,19 @@ main {
   color: white;
   font-size: 20px;
   line-height: 1.6;
+}
+button {
+  background-color: rgb(var(--accent-dark));
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  min-width: 9.5rem;
+  border-radius: 0.25rem;
+  padding: 0 1rem;
+  height: 3rem;
 }
 .astro-a {
   position: absolute;
